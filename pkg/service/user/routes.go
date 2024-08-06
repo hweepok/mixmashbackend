@@ -43,6 +43,7 @@ func (h *Handler) handleRegister(rw http.ResponseWriter, r *http.Request) {
 	var payload types.RegisterUserPayload
 	if err := utils.ParseJSON(r, payload); err != nil {
 		utils.WriteError(rw, http.StatusBadRequest, err)
+		return
 	}
 
 	// check if user exists
