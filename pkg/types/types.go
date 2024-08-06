@@ -10,6 +10,12 @@ type UserStore interface {
 	CreateUser(User) error
 }
 
+type mockUserStore struct{}
+
+func (m *mockUserStore) GetUserByEmail(email string) (*User, error) {
+	return nil, nil
+}
+
 type User struct {
 	ID        int       `json:"id"`
 	UserName  string    `json:"username"`
@@ -19,7 +25,7 @@ type User struct {
 }
 
 type RegisterUserPayload struct {
-	UserName string `json:"username" validate:"required"`
-	Email    string `json:"email" validate:"required"`
-	Password string `json:"password" validate:"required,min=3,max=130"`
+	UserName string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
