@@ -2,14 +2,13 @@ package user
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"net/http"
-	"strings"
+	"log"
 
 	"github.com/hweepok/mixmashbackend/pkg/service/auth"
 	"github.com/hweepok/mixmashbackend/pkg/types"
 	"github.com/hweepok/mixmashbackend/pkg/utils"
+	"github.com/hweepok/mixmashbackend/pkg/config"
 )
 
 type Handler struct {
@@ -24,32 +23,57 @@ func NewHandler(store types.UserStore) *Handler {
 
 func (h *Handler) RegisterRoutes(router *http.ServeMux) {
 	router.HandleFunc("/login", h.handleLogin)
-	router.HandleFunc("/register", h.handleRegister)
+	router.HandleFunc("POST /register", h.handleRegister)
 }
 
 func (h *Handler) handleLogin(rw http.ResponseWriter, r *http.Request) {
-	log.Println("Received request")
-	text, err := io.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
+	var payload types.LoginUserPayload
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("just doesn't work %s: %s", err, payload))
+		utils.WriteError(rw, http.StatusBadRequest, err)
+		return
 	}
 
-	newText := strings.ReplaceAll(string(text), "this", "butt")
-	rw.Write([]byte(newText))
+	// Validate payload TODO
+
+	// check if user exists
+	user, err := h.store.GetUserByEmail(payload.Email)
+	if err != nil {
+		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("Invalid email or password"))
+		return
+	}
+
+	if !auth.ComparePasswords(user.Password, []byte(payload.Password)) {
+		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("invalid email or password"))
+		return
+	}
+	
+	secret := []byte(config.Envs.JWTSecret)
+	token, err := auth.CreateJWT(secret, user.ID)
+	if err != nil {
+		utils.WriteError(rw, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(rw, http.StatusOK, map[string]string{"token": token})
 }
 
 func (h *Handler) handleRegister(rw http.ResponseWriter, r *http.Request) {
 	// json payload for new user
 	var payload types.RegisterUserPayload
-	if err := utils.ParseJSON(r, payload); err != nil {
+	if err := utils.ParseJSON(r, &payload); err != nil {
+		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("just doesn't work %s: %s", err, payload))
 		utils.WriteError(rw, http.StatusBadRequest, err)
 		return
 	}
 
+	// Validate payload
+	// TODO
+
 	// check if user exists
 	_, err := h.store.GetUserByEmail(payload.Email)
-	if err != nil {
-		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
+	if err == nil {
+		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("user with email %s already exists %s", payload.Email, err))
 		return
 	}
 
@@ -65,6 +89,7 @@ func (h *Handler) handleRegister(rw http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	})
 	if err != nil {
+		utils.WriteError(rw, http.StatusInternalServerError, fmt.Errorf("couldn't create user"))
 		utils.WriteError(rw, http.StatusInternalServerError, err)
 		return
 	}
