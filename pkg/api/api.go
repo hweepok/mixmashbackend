@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hweepok/mixmashbackend/pkg/service/recipe"
 	"github.com/hweepok/mixmashbackend/pkg/service/user"
 	"github.com/hweepok/mixmashbackend/pkg/storage"
 )
@@ -27,6 +28,10 @@ func (s *APIServer) Run() error {
 	userStore := db.NewStore(s.db)
 	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(router)
+
+	recipeStore := db.NewStore(s.db)
+	recipeHandler := recipe.NewHandler(recipeStore)
+	recipeHandler.RegisterRoutes(router)
 
 	log.Println("Server running on: ", s.addr)
 

@@ -2,13 +2,13 @@ package user
 
 import (
 	"fmt"
-	"net/http"
 	"log"
+	"net/http"
 
+	"github.com/hweepok/mixmashbackend/pkg/config"
 	"github.com/hweepok/mixmashbackend/pkg/service/auth"
 	"github.com/hweepok/mixmashbackend/pkg/types"
 	"github.com/hweepok/mixmashbackend/pkg/utils"
-	"github.com/hweepok/mixmashbackend/pkg/config"
 )
 
 type Handler struct {
@@ -47,7 +47,7 @@ func (h *Handler) handleLogin(rw http.ResponseWriter, r *http.Request) {
 		utils.WriteError(rw, http.StatusBadRequest, fmt.Errorf("invalid email or password"))
 		return
 	}
-	
+
 	secret := []byte(config.Envs.JWTSecret)
 	token, err := auth.CreateJWT(secret, user.ID)
 	if err != nil {

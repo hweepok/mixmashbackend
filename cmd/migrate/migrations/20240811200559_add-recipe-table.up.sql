@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS recipes (
+	`id` VARCHAR(255) NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	`description` VARCHAR(255) NOT NULL,
+	`imageURL` VARCHAR(255) NOT NULL,
+	`source` VARCHAR(255) NOT NULL,
+	`alterations` VARCHAR(255),
+	`time` VARCHAR(255) NOT NULL,
+	`servings` INT UNSIGNED NOT NULL,
+
+	PRIMARY KEY (id)
+);

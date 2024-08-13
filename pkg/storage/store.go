@@ -85,3 +85,21 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 
 	return user, nil
 }
+
+func (s *Store) GetRecipeByName(name string) (*types.Recipe, error) {
+	return nil, nil
+}
+
+func (s *Store) GetRecipeByID(id string) (*types.Recipe, error) {
+	return nil, nil
+}
+
+func (s *Store) CreateRecipe(recipe types.Recipe) error {
+	_, err := s.db.Exec("INSERT INTO recipes(id, name, description, imageURL, source, alterations, time, servings) VALUES(?,?,?,?,?,?,?,?)",
+		recipe.ID, recipe.Name, recipe.Description, recipe.ImageUrl, recipe.Source, recipe.Alterations,
+		recipe.TotalTime, recipe.Servings)
+	if err != nil {
+		return err
+	}
+	return nil
+}
